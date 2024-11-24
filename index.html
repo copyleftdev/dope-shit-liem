@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Awesome Dashboard</title>
+    
+    <!-- Tailwind CSS for modern, responsive UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- FontAwesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 font-sans leading-tight tracking-tight text-white">
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Dashboard Name and Tagline -->
+        <div class="text-center mb-6">
+            <h1 class="text-5xl font-bold text-gray-200">Super Awesome Dashboard</h1>
+            <p class="text-xl text-gray-400 mt-2">This could happen if you bring me back</p>
+        </div>
+
+        <!-- Search Filter Section -->
+        <div class="mb-6 flex justify-center">
+            <input type="text" id="searchFilter" class="px-4 py-2 rounded-lg w-1/2 text-gray-800" placeholder="Search by Bot ID, Correlation ID, or Office ID..." oninput="filterBots()">
+        </div>
+
+        <!-- Bot Performance and Error Metrics Section -->
+        <div id="charts-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Placeholder for dynamic charts -->
+        </div>
+    </div>
+
+    <script>
+        // Function to generate realistic bot data (e.g., success/failure patterns)
+        function generateBotData(botId) {
+            const currentDate = new Date();
+
+            // Simulating performance trends with gradual increase in failure
+            const successCount = Math.max(0, 150 - Math.floor(Math.random() * 30) - Math.floor(Math.random() * 30)); // Success count starts high
+            const failureCount = Math.floor(Math.random() * 30) + (successCount < 100 ? Math.floor(Math.random() * 30) : 0); // Failure increases as success decreases
+
+            // Error types: More realistic set of errors
+            const timeoutError = Math.min(10, Math.floor(failureCount * Math.random())); // Timeout errors correlate with failure
+            const networkError = Math.min(10, Math.floor(failureCount * Math.random())); // Network errors also correlate with failure
+            const validationError = Math.min(5, Math.floor(failureCount * Math.random() * 0.5)); // Validation errors are less frequent
+            const unknownError = Math.min(5, Math.floor(failureCount * Math.random() * 0.5)); // Unknown errors are less frequent
+
+            // Procedure Codes: Weighted random distribution of procedure codes
+            const procedureCodes = {
+                'D0120': Math.floor(Math.random() * 10),
+                'D0210': Math.floor(Math.random() * 5),
+                'D0220': Math.floor(Math.random() * 5),
+                'D0272': Math.floor(Math.random() * 8),
+                'D0367': Math.floor(Math.random() * 3)
+            };
+
+            // Simulate success and failure trends over time (seasonal fluctuations)
+            const successTrend = Array.from({ length: 5 }, (_, i) => Math.floor(100 + Math.sin(i) * 50 + Math.random() * 20)); // Smooth fluctuating success data
+            const failureTrend = Array.from({ length: 5 }, (_, i) => Math.floor(50 + Math.cos(i) * 30 + Math.random() * 10)); // Fluctuating failure data
+            
+            return {
+                botId,
+                successCount,
+                failureCount,
+                errorTypes: {
+                    timeout: timeoutError,
+                    network: networkError,
+                    validation: validationError,
+                    unknown: unknownError
+                },
+                procedureCodes,
+                trendData: {
+                    success: successTrend,
+                    failure: failureTrend
+                },
+                metadata: {
+                    patientId: `P-${Math.floor(Math.random() * 1000000)}`,
+                    subscriberId: `S-${Math.floor(Math.random() * 1000000)}`,
+                    appointmentId: `A-${Math.floor(Math.random() * 1000000)}`,
+                    providerName: `Provider-${botId}`,
+                    payerId: `PAYER-${Math.floor(Math.random() * 1000)}`,
+                    payerName: `Payer-${botId}`,
+                    networkStatus: 'InNetwork',
+                    reportError: Math.random() > 0.5 ? 'Error' : 'No Error',
+                    officeId: `O-${Math.floor(Math.random() * 100)}`,
+                    correlationId: `C-${Math.floor(Math.random() * 100000)}`
+                }
+            };
+        }
+
+        // Function to create Line Chart (Success/Failure over Time)
+        function createLineChart(ctx, botData) {
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
+                    datasets: [
+                        {
+                            label: `${botData.botId} Success Count`,
+                            data: botData.trendData.success,
+                            borderColor: '#4CAF50',
+                            backgroundColor: 'rgba(76, 175, 80, 0.3)',
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: `${botData.botId} Failure Count`,
+                            data: botData.trendData.failure,
+                            borderColor: '#FF5733',
+                            backgroundColor: 'rgba(255, 87, 51, 0.3)',
+                            borderWidth: 2,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    animation: { duration: 1000, easing: 'easeInOutQuad' },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        // Function to create Doughnut Chart (Procedure Codes)
+        function createDoughnutChart(ctx, botData) {
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(botData.procedureCodes),
+                    datasets: [{
+                        label: `${botData.botId} Procedure Codes`,
+                        data: Object.values(botData.procedureCodes),
+                        backgroundColor: ['#FFC107', '#FF6347', '#8E44AD', '#4CAF50', '#FF5733'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    animation: { duration: 1000, easing: 'easeInOutQuad' }
+                }
+            });
+        }
+
+        // Function to create Bar Chart (Error Breakdown)
+        function createBarChart(ctx, botData) {
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(botData.errorTypes),
+                    datasets: [{
+                        label: `${botData.botId} Error Count`,
+                        data: Object.values(botData.errorTypes),
+                        backgroundColor: ['#FFC107', '#FF6347', '#8E44AD', '#9B59B6'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    animation: { duration: 1000, easing: 'easeInOutQuad' }
+                }
+            });
+        }
+
+        // Function to calculate common correlation IDs and office IDs that are prone to errors
+        function getErrorProneIDs(botDataList) {
+            const correlationMap = {};
+            const officeMap = {};
+
+            botDataList.forEach(botData => {
+                const correlationId = botData.metadata.correlationId;
+                const officeId = botData.metadata.officeId;
+
+                // Only track correlation IDs and office IDs that have errors
+                if (botData.failureCount > 0) {
+                    correlationMap[correlationId] = (correlationMap[correlationId] || 0) + 1;
+                }
+                if (botData.failureCount > 0) {
+                    officeMap[officeId] = (officeMap[officeId] || 0) + 1;
+                }
+            });
+
+            // Filter out those with no failures
+            const commonCorrelationIds = Object.entries(correlationMap)
+                .filter(([id, count]) => count > 1)
+                .map(([id, count]) => `${id} (x${count})`);
+            
+            const commonOfficeIds = Object.entries(officeMap)
+                .filter(([id, count]) => count > 1)
+                .map(([id, count]) => `${id} (x${count})`);
+
+            return { commonCorrelationIds, commonOfficeIds };
+        }
+
+        // Generate synthetic bots data (20 botids)
+        const botIds = Array.from({ length: 20 }, (_, index) => `bot-${index + 1}`);
+        const botDataList = botIds.map(botId => generateBotData(botId));
+
+        // Create charts for each bot
+        botDataList.forEach((botData, index) => {
+            const chartContainer = document.createElement('div');
+            chartContainer.classList.add('bg-gray-800', 'p-6', 'rounded-xl', 'shadow-lg', 'hover:scale-105', 'transition-all', 'duration-300', 'ease-in-out', 'transform', 'hover:shadow-xl');
+            chartContainer.innerHTML = `
+                <div class="text-xl font-semibold text-gray-200 mb-3">${botData.botId} Performance Trend</div>
+                <div class="chart-container">
+                    <canvas id="lineChart${index}"></canvas>
+                </div>
+                <div class="text-xl font-semibold text-gray-200 mb-3 mt-6">${botData.botId} Procedure Codes</div>
+                <div class="chart-container">
+                    <canvas id="doughnutChart${index}"></canvas>
+                </div>
+                <div class="text-xl font-semibold text-gray-200 mb-3 mt-6">${botData.botId} Error Breakdown</div>
+                <div class="chart-container">
+                    <canvas id="barChart${index}"></canvas>
+                </div>
+                <button class="bg-gray-700 text-white py-2 px-4 rounded mt-4 w-full hover:bg-gray-600" onclick="toggleMetadataPanel(${index})">View Metadata</button>
+                <div id="metadata${index}" class="metadata-panel hidden mt-4 p-4 bg-gray-700 rounded-md">
+                    <p><strong>Bot ID:</strong> ${botData.botId}</p>
+                    <p><strong>Common Correlation IDs:</strong> <span class="text-blue-300 cursor-pointer" onclick="showCorrelationDetails('${botData.metadata.correlationId}')">${botData.metadata.correlationId}</span></p>
+                    <p><strong>Common Office IDs:</strong> <span class="text-blue-300 cursor-pointer" onclick="showOfficeDetails('${botData.metadata.officeId}')">${botData.metadata.officeId}</span></p>
+                    <p><strong>Report Error:</strong> ${botData.metadata.reportError}</p>
+                </div>
+            `;
+            document.getElementById('charts-container').appendChild(chartContainer);
+
+            // Create charts for each bot
+            const lineChartCtx = document.getElementById(`lineChart${index}`).getContext('2d');
+            const doughnutChartCtx = document.getElementById(`doughnutChart${index}`).getContext('2d');
+            const barChartCtx = document.getElementById(`barChart${index}`).getContext('2d');
+
+            createLineChart(lineChartCtx, botData);
+            createDoughnutChart(doughnutChartCtx, botData);
+            createBarChart(barChartCtx, botData);
+        });
+
+        // Search Filter Functionality
+        function filterBots() {
+            const query = document.getElementById("searchFilter").value.toLowerCase();
+            const allBots = document.querySelectorAll('.chart-container');
+            
+            allBots.forEach(container => {
+                const botId = container.querySelector('.text-xl').textContent.toLowerCase();
+                const correlationId = container.querySelector('.metadata-panel').textContent.toLowerCase();
+
+                if (botId.includes(query) || correlationId.includes(query)) {
+                    container.parentElement.style.display = 'block'; // Show matching items
+                } else {
+                    container.parentElement.style.display = 'none'; // Hide non-matching items
+                }
+            });
+        }
+
+        // Show details for common correlation ID
+        function showCorrelationDetails(correlationId) {
+            alert('Showing details for Correlation ID: ' + correlationId);
+            // You can load data here related to the specific correlation ID
+        }
+
+        // Show details for common office ID
+        function showOfficeDetails(officeId) {
+            alert('Showing details for Office ID: ' + officeId);
+            // You can load data here related to the specific office ID
+        }
+
+        // Toggle visibility of metadata panel
+        function toggleMetadataPanel(index) {
+            const metadataPanel = document.getElementById(`metadata${index}`);
+            metadataPanel.classList.toggle('hidden');
+        }
+
+        // Simulate real-time data updates for multiple bots
+        function simulateData() {
+            botDataList.forEach((botData, index) => {
+                // Randomizing data to simulate updates
+                botData.successCount = Math.floor(Math.random() * 150);
+                botData.failureCount = Math.floor(Math.random() * 100);
+                botData.errorTypes.timeout = Math.floor(Math.random() * 10);
+                botData.errorTypes.network = Math.floor(Math.random() * 10);
+                botData.errorTypes.validation = Math.floor(Math.random() * 5);
+                botData.errorTypes.unknown = Math.floor(Math.random() * 5);
+
+                // Simulate new trend data for performance (success/failure)
+                botData.trendData.success.push(Math.floor(Math.random() * 150));
+                botData.trendData.failure.push(Math.floor(Math.random() * 100));
+                if (botData.trendData.success.length > 5) {
+                    botData.trendData.success.shift();
+                    botData.trendData.failure.shift();
+                }
+
+                // Update the charts for each bot
+                const lineChart = Chart.getChart(`lineChart${index}`);
+                const doughnutChart = Chart.getChart(`doughnutChart${index}`);
+                const barChart = Chart.getChart(`barChart${index}`);
+
+                lineChart.update();
+                doughnutChart.update();
+                barChart.update();
+            });
+        }
+
+        // Simulate real-time data updates every 3 seconds
+        simulateData();
+        setInterval(simulateData, 3000);
+    </script>
+
+</body>
+</html>
